@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body>
+    <!-- Ajoutez une image de chargement à votre page -->
+    <img src="loader.gif" id="loader" class="hidden">
+
+    <div class="px-8 py-8 flex flex-col space-y-16">
+      <div class="max-w-2xl w-full">
+        <div class="font-extrabold text-xl text-blue-600">EAI TOOLS</div>
+      </div>
+      <div
+        class="max-w-2xl w-full mx-auto flex flex-col space-y-3 items-center px-4"
+      >
+        <h1 class="text-3xl text-center font-extrabold py-8">
+          Formulaire de validation de nom de domaine
+        </h1>
+        <form
+          id="form"
+          class="flex flex-col items-center space-y-4 w-full md:w-[70%]"
+        >
+          <div class="w-full flex flex-col items-center space-y-4">
+            <input
+              placeholder="Entrez le nom de domaine"
+              id="domaine"
+              type="text"
+              class="border-2 h-[40px] w-full border-blue-500 rounded-lg px-4"
+            />
+          </div>
+          <button
+            class="bg-blue-500 text-white px-8 py-2 rounded-lg text-lg border-blue-500"
+          >
+            Tester
+          </button>
+        </form>
+      </div>
+
+      <div id="resultDiv" class="w-full"></div>
+      <div id="detailData" class="max-w-2xl w-full flex justify-center mx-auto px-8 w-full"></div>
+      
+
+      <div class="max-w-2xl w-full flex justify-center text-gray-400 mx-auto">
+        <span>© Copyright 2023 UADay. All rights reserved</span>
+      </div>
+    </div>
+
+    <script>
+      let result = false;
+      const form = document.getElementById("form");
+      const domaine = document.getElementById("domaine");
+      const resultDiv = document.getElementById("resultDiv");
+      const detailData = document.querySelector('#detailData');
+      form.addEventListener("submit", logSubmit);
+
+      async function logSubmit(event) {
+        event.preventDefault();
+        if (domaine.value === "") {
+          alert("Veuillez remplir le champs du domaine");
+        } else {
+          const domaineValue = domaine.value;
+          try {
+            resultDiv.innerHTML = "";
+            
+            // Créer l'élément HTML pour le loader
+            const loader = document.createElement('div');
+            loader.classList.add('loader');
+            detailData.appendChild(loader);
+            const request = await fetch(
+              `http://127.0.0.1:5000/mx_records/${domaineValue}`,
+              {
+                method: "GET",
+                headers: {
+                  "Access-Control-Allow-Origin": "*",
+                },
+                // body: JSON.stringify({
+                //   domaine: domaineValue,
+                // }),
+                // headers: {
+                //   "Content-type": "application/json",
+                // },
+              }
+            );
+            const response = await request.json();
+
+            const { mx_records } = response;
+           
+            if (mx_records) {
+              if (mx_records[0].isvalid_eia === true) {
+                resultDiv.innerHTML =
+                  '<div class="max-w-2xl w-full flex justify-center mx-auto py-4 px-4 border-2 border-green-500 border-dashed rounded-lg" > <span class="text-2xl font-semibold text-green-500"> Email verifié </span> </div>';
+                  const table = document.createElement('table');
+                  //table.classList.add('shadow-lg bg-white');
+                  // Créer l'en-tête du tableau
+                  const headerRow = table.insertRow();
+                  let keys;
+                  for (let value of mx_records) {
+                    keys = Object.keys(value);
+                    console.log(keys);
+                  }
+                  
+                  for (let key of keys) {
+                    const headerCell = headerRow.insertCell();
+                    headerCell.textContent = key;
+                  }
+
+                  // Remplir le tableau avec les données
+                  for (let item of mx_records) {
+                    const row = table.insertRow();
+                    for (let key of keys) {
+                      const cell = row.insertCell();
+                      cell.textContent = item[key];
+                    }
+                  }
+
+                  // Ajouter le tableau dans le conteneur
+                  detailData.innerHTML = '';
+                  detailData.appendChild(table);
+                   // Ajouter le CSS pour styliser le tableau
+                  
+                
+                  loader.remove();
+              } else {
+                resultDiv.innerHTML =
+                  '<div class="max-w-2xl w-full flex justify-center mx-auto py-4 px-4 border-2 border-red-500 border-dashed rounded-lg" > <span class="text-2xl font-semibold text-red-500"> Email non verifié </span> </div>';
+              }
+            } else {
+              resultDiv.innerHTML =
+                '<div class="max-w-2xl w-full flex justify-center mx-auto py-4 px-4 border-2 border-red-500 border-dashed rounded-lg" > <span class="text-2xl font-semibold text-red-500"> Email non verifié </span> </div>';
+            }
+          } catch (error) {
+            console.log(error);
+          }
+        }
+      }
+    </script>
+  </body>
+</html>

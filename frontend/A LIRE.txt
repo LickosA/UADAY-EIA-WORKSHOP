@@ -1,0 +1,1 @@
+Exécuter "npm install" pour installer les dépendances node_modules. Sans quoi, TailwindCss ne fonctionnera pas
